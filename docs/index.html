@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aslibhaav — the real price</title>
+<meta name="description" content="Enter a distributor's scheme and see the true effective cost per unit. Trade + cash discounts, free goods and freight, compared apples-to-apples.">
+<style>
+  :root{
+    --bg:#f6f7f5; --card:#ffffff; --ink:#15201a; --muted:#5b6b62;
+    --brand:#16733e; --brand-ink:#0c3d21; --line:#e2e7e3; --accent:#eaf5ee;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#0f1512; --card:#161d19; --ink:#e8efe9; --muted:#9db0a5;
+      --brand:#3fae72; --brand-ink:#bfe6cd; --line:#243029; --accent:#15241b; }
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg); color:var(--ink);
+    font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px}
+  header{padding:64px 0 32px; text-align:center}
+  .eyebrow{color:var(--brand); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:13px}
+  h1{font-size:44px; margin:.2em 0 .1em; letter-spacing:-.02em}
+  .tag{color:var(--muted); font-size:19px; max-width:620px; margin:8px auto 0}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:28px 0}
+  @media (max-width:760px){ .grid{grid-template-columns:1fr} h1{font-size:34px} }
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px}
+  .card h2{margin:0 0 8px; font-size:20px}
+  label{display:block; font-size:13px; color:var(--muted); margin:10px 0 4px}
+  input[type=number],select{width:100%; padding:10px 12px; border:1px solid var(--line);
+    border-radius:10px; background:var(--bg); color:var(--ink); font-size:15px}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .switch{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:14px; color:var(--muted)}
+  .out{margin-top:16px; background:var(--accent); border-radius:12px; padding:16px}
+  .big{font-size:34px; font-weight:800; color:var(--brand-ink)}
+  .rowline{display:flex; justify-content:space-between; padding:3px 0; font-size:14px; border-top:1px dashed var(--line); margin-top:6px}
+  .steps li{margin:8px 0}
+  footer{color:var(--muted); font-size:13px; text-align:center; padding:40px 0}
+  code{background:var(--accent); padding:2px 6px; border-radius:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Aslibhaav · असली भाव</div>
+    <h1>The real price of a scheme</h1>
+    <p class="tag">Distributor offers hide the true cost behind trade discounts, cash discounts,
+      free goods and freight. Type the terms — see the real cost per unit.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Try it</h2>
+      <label>Base price per unit (₹)</label><input id="base" type="number" value="100">
+      <div class="two">
+        <div><label>Trade discount %</label><input id="trade" type="number" value="10"></div>
+        <div><label>Cash discount %</label><input id="cash" type="number" value="5"></div>
+      </div>
+      <div class="two">
+        <div><label>Buy qty (X)</label><input id="buy" type="number" value="10"></div>
+        <div><label>Free qty (Y)</label><input id="get" type="number" value="2"></div>
+      </div>
+      <label>Freight (₹, total)</label><input id="freight" type="number" value="120">
+      <div class="switch"><input id="fx" type="checkbox" checked><span>Freight charged extra (on top)</span></div>
+      <div class="out">
+        <div>True effective cost per unit</div>
+        <div class="big" id="eff">₹0.00</div>
+        <div class="rowline"><span>After trade discount</span><b id="r1">–</b></div>
+        <div class="rowline"><span>After cash discount</span><b id="r2">–</b></div>
+        <div class="rowline"><span>After free goods</span><b id="r3">–</b></div>
+        <div class="rowline"><span>Freight per unit</span><b id="r4">–</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Why it's hard to eyeball</h2>
+      <p style="color:var(--muted)">A 10% trade discount and a 5% cash discount don't add to 15% —
+        they compound. "Buy 10 get 2 free" quietly spreads your cost over 12 units. Freight can be
+        on top or already inside the price. Aslibhaav does the compounding so two schemes with
+        different shapes become comparable.</p>
+      <ol class="steps">
+        <li>Trade then cash discount, applied in sequence.</li>
+        <li>Free goods dilute cost across <code>X + Y</code> received units.</li>
+        <li>Extra freight is allocated per received unit.</li>
+      </ol>
+      <p style="color:var(--muted); font-size:14px">Built as Flutter → Go → PostgreSQL. The Go
+        middleware owns the same calculation and keeps a history of what each scheme really cost.</p>
+    </div>
+  </div>
+
+  <footer>Aslibhaav · a local-first shopkeeper tool · offline, no account.</footer>
+</div>
+<script>
+  const $=id=>document.getElementById(id);
+  const inr=v=>'₹'+(isFinite(v)?v:0).toFixed(2);
+  function calc(){
+    const base=+$('base').value||0, trade=+$('trade').value||0, cash=+$('cash').value||0;
+    const buy=+$('buy').value||0, get=+$('get').value||0, freight=+$('freight').value||0, fx=$('fx').checked;
+    const afterTrade=base*(1-trade/100);
+    const afterCash=afterTrade*(1-cash/100);
+    const units=buy+get; let factor=1; if(buy>0&&units>0) factor=buy/units;
+    const afterFree=afterCash*factor;
+    let fpu=0; if(fx){ const d=units<=0?1:units; fpu=freight/d; }
+    const eff=afterFree+fpu;
+    $('eff').textContent=inr(eff);
+    $('r1').textContent=inr(afterTrade); $('r2').textContent=inr(afterCash);
+    $('r3').textContent=inr(afterFree); $('r4').textContent=inr(fpu);
+  }
+  document.querySelectorAll('input').forEach(el=>el.addEventListener('input',calc));
+  calc();
+</script>
+</body>
+</html>
